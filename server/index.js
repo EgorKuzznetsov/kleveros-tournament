@@ -1,3 +1,4 @@
+// server/index.js
 import express from "express";
 import cors from "cors";
 import fetch from "node-fetch";
@@ -9,29 +10,32 @@ dotenv.config();
 const app = express();
 app.use(cors());
 app.use(express.json());
+
+// ===== ЛОГИ СТАРТА =====
+console.log("KEY:", (process.env.CHALLONGE_API_KEY || "").slice(0, 6) + "...");
+console.log("TOURNEY:", process.env.CHALLONGE_TOURNEY);
+
+// ===== Rate limit: не более 3 заявок в минуту с одного IP =====
 const registerLimiter = rateLimit({
   windowMs: 60 * 1000,
   max: 3,
   standardHeaders: true,
   legacyHeaders: false,
-  message: { ok: false, error: "Слишком много запросов. Попробуйте позже." }
+  message: { ok: false, error: "Too many requests. Try again later." },
 });
 app.use("/api/register", registerLimiter);
-const lastByContact = new Map(); // key: messenger|email -> timestamp
-function tooSoon(contact, ms = 30_000) {
-  const now = Date.now();
-  const t = lastByContact.get(contact) || 0;
-  const ok = now - t > ms;
-  if (ok) lastByContact.set(contact, now);
-  return !ok;
-}
+
+// ===== Хелперы (нормализация/валидация) =====
 function cleanStr(s = "") {
   return String(s || "").trim().replace(/\s+/g, " ");
 }
-function hasUrl(s="") { return /(https?:\/\/|t\.me\/|@everyone|@here)/i.test(s); }
-function tooManyRepeats(s="") { return /(.)\1{3,}/i.test(s); } // aaaa / !!!! и т.п.
-
-function isBadInput(s="") {
+function hasUrl(s = "") {
+  return /(https?:\/\/|t\.me\/|@everyone|@here)/i.test(s);
+}
+function tooManyRepeats(s = "") {
+  return /(.)\1{3,}/i.test(s); // aaaa, !!!! и т.д.
+}
+function isBadInput(s = "") {
   const v = cleanStr(s);
   if (!v) return true;
   if (v.length > 40) return true;
@@ -39,12 +43,42 @@ function isBadInput(s="") {
   if (tooManyRepeats(v)) return true;
   return false;
 }
-console.log("KEY:", (process.env.CHALLONGE_API_KEY || "").slice(0, 6) + "...");
-console.log("TOURNEY:", process.env.CHALLONGE_TOURNEY);
+function escapeHtml(s = "") {
+  return String(s)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
 
+// простая память-кулдаун по контакту (telegram/email/ip)
+const lastByContact = new Map(); // key -> timestamp
+function tooSoon(contact, ms = 30_000) {
+  const now = Date.now();
+  const t = lastByContact.get(contact) || 0;
+  const ok = now - t > ms;
+  if (ok) lastByContact.set(contact, now);
+  return !ok;
+}
+
+// ===== Опционально: hCaptcha-проверка =====
+// добавь HCAPTCHA_SECRET в переменные окружения, чтобы включить
+async function verifyHCaptcha(token) {
+  const secret = process.env.HCAPTCHA_SECRET;
+  if (!secret) return true; // если не настроено — пропускаем
+  if (!token) return false;
+  const resp = await fetch("https://hcaptcha.com/siteverify", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({ secret, response: token }),
+  });
+  const data = await resp.json();
+  return !!data.success;
+}
+
+// ===== Служебный =====
 app.get("/", (_, res) => res.send("API ok"));
 
-// --- Challonge: добавить команду как участника (name = название команды) ---
+// ===== Challonge API =====
 async function addTeamToChallonge({ teamName, misc }) {
   const tourney = process.env.CHALLONGE_TOURNEY;
   const key = process.env.CHALLONGE_API_KEY;
@@ -55,8 +89,10 @@ async function addTeamToChallonge({ teamName, misc }) {
   const resp = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json", Accept: "application/json" },
-    body: JSON.stringify({ participant: { name: teamName, misc } }) // без email -> не будет "Pending invitation"
+    // В participant НЕ указываем email — чтобы не было "Pending invitation"
+    body: JSON.stringify({ participant: { name: teamName, misc } }),
   });
+
   if (!resp.ok) {
     const text = await resp.text();
     throw new Error(`Challonge API error ${resp.status}: ${text}`);
@@ -64,23 +100,25 @@ async function addTeamToChallonge({ teamName, misc }) {
   return await resp.json();
 }
 
-// --- Telegram уведомления ---
+// ===== Уведомление в Telegram =====
 async function notifyTelegram(text) {
   const token = process.env.TELEGRAM_BOT_TOKEN;
   const chatId = process.env.TELEGRAM_CHAT_ID;
-  if (!token || !chatId) throw new Error("TELEGRAM_BOT_TOKEN / TELEGRAM_CHAT_ID not set");
+  if (!token || !chatId) {
+    console.warn("Telegram env not set");
+    return;
+  }
   const url = `https://api.telegram.org/bot${token}/sendMessage`;
   const resp = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ chat_id: chatId, text, parse_mode: "HTML" })
+    body: JSON.stringify({ chat_id: chatId, text, parse_mode: "HTML" }),
   });
-  const body = await resp.text();
-  console.log("Telegram resp:", resp.status, body);
-  if (!resp.ok) throw new Error(`Telegram error ${resp.status}: ${body}`);
+  const t = await resp.text();
+  console.log("Telegram resp:", resp.status, t);
 }
 
-// тест ТГ: GET /api/test-telegram?text=hi
+// ===== Тест ручка на телегу =====
 app.get("/api/test-telegram", async (req, res) => {
   try {
     await notifyTelegram(req.query.text || "Test from server");
@@ -91,127 +129,156 @@ app.get("/api/test-telegram", async (req, res) => {
   }
 });
 
-// локальный бэкап соло-заявок
+// ===== Соло-заявки складываем в файл (для ручной компоновки команд) =====
 async function saveSoloRequest(data) {
   const path = "./solo_queue.json";
-  let arr = [];
-  try { arr = JSON.parse(await fs.readFile(path, "utf8")); } catch {}
-  arr.push({ ...data, createdAt: new Date().toISOString() });
-  await fs.writeFile(path, JSON.stringify(arr, null, 2), "utf8");
+  let curr = [];
+  try {
+    const raw = await fs.readFile(path, "utf8");
+    curr = JSON.parse(raw);
+  } catch {
+    /* файла пока нет — ок */
+  }
+  curr.push({ ...data, createdAt: new Date().toISOString() });
+  await fs.writeFile(path, JSON.stringify(curr, null, 2), "utf8");
 }
 
-// ---- основной маршрут ----
+// ======== РЕГИСТРАЦИЯ ========
 app.post("/api/register", async (req, res) => {
   try {
-    console.log("Incoming register:", req.body);
-
     const {
-      join_type,            // 'team' | 'solo'
-      team_or_nick,         // команда или ник
-      messenger,            // Telegram
-      email, phone,         // опц.
-      mmr,                  // для solo
-      player_nick,          // для информации (капитан/игрок)
-      team_name,            // для информации
-      roster_text           // опц. состав команды текстом
+      join_type, // 'team' | 'solo'
+      format, // произвольная инфа с формы
+      team_or_nick, // иногда фронт шлёт это поле
+      team_name,
+      player_nick,
+      roster_text,
+      captain_instagram,
+      messenger,
+      email,
+      phone,
+      mmr,
+      // hCaptcha
+      "h-captcha-response": hCaptchaToken,
+      // honeypot
+      honeypot,
     } = req.body;
-if (req.body.honeypot) {
-      return res.status(400).json({ ok:false, error:"Spam detected" });
+
+    // ===== Honeypot: если бот заполнил скрытое поле — отбой
+    if (honeypot) {
+      return res.status(400).json({ ok: false, error: "Spam detected" });
     }
 
-    // Нормализация
+    // ===== hCaptcha (если включено переменной окружения)
+    const captchaOk = await verifyHCaptcha(hCaptchaToken);
+    if (!captchaOk) {
+      return res.status(400).json({ ok: false, error: "Captcha failed" });
+    }
+
+    // ===== Нормализация/валидация
     const joinType = (join_type || "").toLowerCase();
     const nick = cleanStr(player_nick);
     const team = cleanStr(team_or_nick || team_name);
-    const tg   = cleanStr(messenger);
+    const tg = cleanStr(messenger);
     const mail = cleanStr(email);
 
-    // Персональный кулдаун: не чаще 1 заявки / 30 сек с одного контакта
+    // Персональный кулдаун: 1 заявка / 30 сек с одного контакта (или IP)
     const cooldownKey = tg || mail || req.ip;
     if (tooSoon(cooldownKey, 30_000)) {
-      return res.status(429).json({ ok:false, error:"Пожалуйста, подождите немного и отправьте снова." });
+      return res
+        .status(429)
+        .json({ ok: false, error: "Будь ласка, спробуйте ще раз трохи пізніше." });
     }
 
-    // Базовая валидация
     if (joinType === "solo") {
-      if (isBadInput(nick)) return res.status(400).json({ ok:false, error:"Некоректний нік" });
-      if (!tg || tg.length < 3 || tg.length > 50) return res.status(400).json({ ok:false, error:"Вкажіть коректний Telegram" });
+      if (isBadInput(nick))
+        return res.status(400).json({ ok: false, error: "Некоректний нік" });
+      if (!tg || tg.length < 3 || tg.length > 50)
+        return res
+          .status(400)
+          .json({ ok: false, error: "Вкажіть коректний Telegram" });
       const mmrNum = Number(mmr);
       if (!Number.isFinite(mmrNum) || mmrNum < 0 || mmrNum > 15000) {
-        return res.status(400).json({ ok:false, error:"Некоректний MMR" });
+        return res.status(400).json({ ok: false, error: "Некоректний MMR" });
       }
     } else {
       // team
-      if (isBadInput(team)) return res.status(400).json({ ok:false, error:"Некоректна назва команди" });
-      if (isBadInput(nick)) return res.status(400).json({ ok:false, error:"Некоректний нік капітана" });
-      if (!tg || tg.length < 3 || tg.length > 50) return res.status(400).json({ ok:false, error:"Вкажіть коректний Telegram" });
-      if ((roster_text || "").length > 500) return res.status(400).json({ ok:false, error:"Занадто довгий список складу" });
+      if (isBadInput(team))
+        return res
+          .status(400)
+          .json({ ok: false, error: "Некоректна назва команди" });
+      if (isBadInput(nick))
+        return res
+          .status(400)
+          .json({ ok: false, error: "Некоректний нік капітана" });
+      if (!tg || tg.length < 3 || tg.length > 50)
+        return res
+          .status(400)
+          .json({ ok: false, error: "Вкажіть коректний Telegram" });
+      if ((roster_text || "").length > 500)
+        return res
+          .status(400)
+          .json({ ok: false, error: "Занадто довгий список складу" });
     }
-    const type = String(join_type || "").trim().toLowerCase();
 
-    if (!team_or_nick?.trim())
-      return res.status(400).json({ ok: false, error: "Название команды / ник обязателен" });
-    if (!messenger?.trim())
-      return res.status(400).json({ ok: false, error: "Укажи Telegram для связи" });
-
-    if (type === "team") {
+    // ===== ДАЛЕЕ — БОЕВАЯ ЛОГИКА =====
+    if (joinType === "team") {
+      // Сохраняем команду в Challonge (без email -> не будет "invitation pending")
       const misc = JSON.stringify({
-        captain_nick: player_nick || null,
-        messenger,
-        phone: phone || null,
-        email: email || null,
-        roster_text: roster_text || null
+        format,
+        captain_instagram,
+        messenger: tg,
+        phone,
+        roster: cleanStr(roster_text || ""),
       });
-      const added = await addTeamToChallonge({ teamName: team_or_nick.trim(), misc });
 
+      const added = await addTeamToChallonge({
+        teamName: team,
+        misc,
+      });
+
+      // Уведомление в телегу
       await notifyTelegram(
-        `🟢 <b>Новая команда</b>\n` +
-        `Команда: <b>${team_or_nick.trim()}</b>\n` +
-        `Капитан: ${player_nick || "-"}\n` +
-        `TG: ${messenger}${phone ? " | Тел: " + phone : ""}${email ? " | Email: " + email : ""}\n` +
-        (roster_text ? `Состав: ${roster_text}` : "")
+        `🟢 <b>Нова команда</b>\n` +
+          `Команда: <b>${escapeHtml(team)}</b>\n` +
+          `Капітан: ${escapeHtml(nick)}\n` +
+          `Інст: ${escapeHtml(captain_instagram || "-")}\n` +
+          `TG: ${escapeHtml(tg || "-")}${phone ? "  Тел: " + escapeHtml(phone) : ""}\n` +
+          (roster_text
+            ? `Склад: ${escapeHtml(cleanStr(roster_text))}`
+            : "")
       );
 
       return res.json({ ok: true, participant: added });
+    } else {
+      // SOLO: в очередь + уведомление (в сетку не добавляем)
+      const payload = {
+        nick,
+        instagram: captain_instagram,
+        messenger: tg,
+        email: mail,
+        phone,
+        mmr: mmr ? Number(mmr) : null,
+      };
+
+      await saveSoloRequest(payload);
+
+      await notifyTelegram(
+        `🟡 <b>Соло-заявка</b>\n` +
+          `Нік: <b>${escapeHtml(nick)}</b>\n` +
+          `MMR: ${payload.mmr ?? "-"}\n` +
+          `TG: ${escapeHtml(tg || "-")}\n` +
+          `Email: ${escapeHtml(mail || "-")}  Тел: ${escapeHtml(phone || "-")}`
+      );
+
+      return res.json({ ok: true, queued: true });
     }
-
-   if (type === "solo") {
-  const mmrNum = mmr !== undefined && String(mmr).trim() !== "" ? Number(mmr) : null;
-  if (mmrNum === null || Number.isNaN(mmrNum) || mmrNum < 0)
-    return res.status(400).json({ ok: false, error: "Укажи корректный MMR (число ≥ 0)" });
-
-  const payload = {
-    nick: team_or_nick.trim(),
-    messenger,
-    email: email || null,
-    phone: phone || null,
-    mmr: mmrNum
-  };
-
-  // Сохраним — это быстро
-  await saveSoloRequest(payload);
-
-  // 👉 СРАЗУ отдать ответ клиенту
-  res.json({ ok: true, queued: true });
-
-  // 👉 Уведомление — фоном
-  notifyTelegram(
-    `🟡 <b>Соло-заявка</b>\n` +
-    `Ник: <b>${payload.nick}</b>\n` +
-    `MMR: ${payload.mmr}\n` +
-    `TG: ${payload.messenger}\n` +
-    `Email: ${payload.email || "-"} | Тел: ${payload.phone || "-"}`
-  ).catch(console.error);
-
-  return; // ответ уже отправлен
-}
-
-    return res.status(400).json({ ok: false, error: "Неверный join_type (team/solo)" });
   } catch (e) {
     console.error(e);
-    res.status(400).json({ ok: false, error: e.message });
+    return res.status(400).json({ ok: false, error: e.message });
   }
 });
 
+// ===== СТАРТ =====
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`API running on http://localhost:${PORT}`));
