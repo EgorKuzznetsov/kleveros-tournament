@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Регистрация — Dota 2 Cup</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { theme: { extend: { fontFamily: { sans: ['Inter','ui-sans-serif'] } } } }
+  </script>
+</head>
+<body class="bg-zinc-950 text-zinc-100">
+<header class="sticky top-0 z-50 backdrop-blur bg-zinc-950/70 border-b border-white/5">
+  <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+    <a href="index.html" class="font-semibold">← На главную</a>
+    <a href="rules.html" class="text-sm text-zinc-300 hover:text-white">Правила</a>
+  </div>
+</header>
+
+<main class="max-w-3xl mx-auto px-4 py-10">
+  <h1 class="text-3xl font-extrabold">Регистрация</h1>
+  <p class="text-zinc-400 mt-2">Команда — укажи название, ник капитана и Telegram. Соло — ник, Telegram и MMR.</p>
+
+  <form id="regForm" class="mt-8 space-y-6 bg-white/5 border border-white/10 rounded-2xl p-6" novalidate>
+    <!-- Тип + Telegram -->
+    <div class="grid md:grid-cols-2 gap-5">
+      <div>
+        <label class="block text-sm text-zinc-300 mb-1">Тип участия</label>
+        <select name="join_type" id="join_type" class="w-full bg-zinc-900 border border-white/10 rounded-xl px-3 py-2" required>
+          <option value="team">Команда 5x5</option>
+          <option value="solo">Соло</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm text-zinc-300 mb-1">Telegram для связи</label>
+        <input name="messenger" id="messenger" class="w-full bg-zinc-900 border border-white/10 rounded-xl px-3 py-2" placeholder="@your_username" required>
+      </div>
+    </div>
+
+    <!-- Название команды + Ник -->
+    <div class="grid md:grid-cols-2 gap-5">
+      <div id="teamNameWrap">
+        <label class="block text-sm text-zinc-300 mb-1">Название команды</label>
+        <input name="team_name" id="team_name" class="w-full bg-zinc-900 border border-white/10 rounded-xl px-3 py-2" placeholder="Например, Radiant Five">
+      </div>
+      <div>
+        <label class="block text-sm text-zinc-300 mb-1">Ник (капитана / игрока)</label>
+        <input name="player_nick" id="player_nick" class="w-full bg-zinc-900 border border-white/10 rounded-xl px-3 py-2" placeholder="Например, Dendi" required>
+      </div>
+    </div>
+
+    <!-- MMR — только для соло -->
+    <div id="mmrBlock" class="hidden">
+      <label class="block text-sm text-zinc-300 mb-1">MMR (только для соло)</label>
+      <input name="mmr" id="mmr" type="number" min="0" step="1" class="w-full bg-zinc-900 border border-white/10 rounded-xl px-3 py-2" placeholder="например, 2500">
+    </div>
+
+    <!-- Контакты -->
+    <div class="grid md:grid-cols-2 gap-5">
+      <div>
+        <label class="block text-sm text-zinc-300 mb-1">E-mail (опционально)</label>
+        <input name="email" type="email" class="w-full bg-zinc-900 border border-white/10 rounded-xl px-3 py-2" placeholder="name@email.com">
+      </div>
+      <div>
+        <label class="block text-sm text-zinc-300 mb-1">Телефон (опционально)</label>
+        <input name="phone" class="w-full bg-zinc-900 border border-white/10 rounded-xl px-3 py-2" placeholder="+380...">
+      </div>
+    </div>
+
+    <!-- Состав команды — текстом (опционально), Steam-аккаунтов больше НЕТ -->
+    <div id="teamRoster" class="">
+      <label class="block text-sm text-zinc-300 mb-1">Состав команды (текстом, опционально)</label>
+      <textarea name="roster_text" rows="3" class="w-full bg-zinc-900 border border-white/10 rounded-xl px-3 py-2" placeholder="Игрок 1, Игрок 2, Игрок 3, Игрок 4, Игрок 5"></textarea>
+    </div>
+
+    <div class="flex items-start gap-3">
+      <input id="agree" type="checkbox" class="mt-1" required>
+      <label for="agree" class="text-sm text-zinc-300">Я принимаю <a class="underline" href="rules.html">правила турнира</a>.</label>
+    </div>
+
+    <button type="button" id="submitBtn" class="rounded-xl px-5 py-3 bg-indigo-600 hover:bg-indigo-500 transition">
+      Отправить заявку
+    </button>
+  </form>
+</main>
+
+<script>
+  const joinTypeSel = document.getElementById('join_type');
+  const mmrBlock    = document.getElementById('mmrBlock');
+  const mmrInput    = document.getElementById('mmr');
+  const teamRoster  = document.getElementById('teamRoster');
+  const teamNameInp = document.getElementById('team_name');
+
+  function toggleByType() {
+    const isSolo = joinTypeSel.value === 'solo';
+    mmrBlock.classList.toggle('hidden', !isSolo);
+    teamRoster.classList.toggle('hidden', isSolo);
+    if (isSolo) {
+      mmrInput.setAttribute('required', 'required');
+      teamNameInp.removeAttribute('required');
+    } else {
+      mmrInput.removeAttribute('required');
+      teamNameInp.setAttribute('required', 'required');
+    }
+  }
+  joinTypeSel.addEventListener('change', toggleByType);
+  toggleByType();
+
+  const submitBtn = document.getElementById('submitBtn');
+  const form = document.getElementById('regForm');
+
+  submitBtn.addEventListener('click', async () => {
+    if (!form.reportValidity()) return;
+
+    const fd = new FormData(form);
+    const data = Object.fromEntries(fd.entries());
+    const isSolo = data.join_type === 'solo';
+
+    // Собираем общее поле для сервера
+    data.team_or_nick = isSolo ? (data.player_nick || '').trim() : (data.team_name || '').trim();
+    if (!data.team_or_nick) {
+      alert(isSolo ? 'Укажи ник.' : 'Укажи название команды.');
+      return;
+    }
+    if (isSolo) {
+      if (!data.messenger?.trim()) return alert('Укажи Telegram.');
+      if (!data.mmr || Number(data.mmr) < 0) return alert('Укажи корректный MMR.');
+    }
+
+    try {
+  const resp = await fetch('http://localhost:3000/api/register', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+  });
+
+  // Сначала проверим статус и дочитаем тело
+  const payload = await resp.text(); // можно и resp.json(), если на сервере всегда json
+
+  if (!resp.ok) {
+    throw new Error(payload || 'Ошибка сервера');
+  }
+
+  // только после успешного ответа — переход
+  window.location.href = 'success.html';
+} catch (err) {
+  console.error(err);
+  alert('Ошибка регистрации: ' + err.message);
+}
+  });
+</script>
+</body>
+</html>

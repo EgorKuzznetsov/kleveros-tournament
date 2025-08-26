@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Dota 2 Cup by Your Shop</title>
+    <meta name="description" content="Официальный сайт турнира по Dota 2 с реальными призами от магазина Your Shop." />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = { theme: { extend: {
+        fontFamily: { sans: ['Inter', 'ui-sans-serif', 'system-ui'] },
+        boxShadow: { 'glow':'0 0 40px rgba(99,102,241,0.35)' }
+      } } }
+    </script>
+    <link rel="icon" href="/assets/favicon.ico">
+    <style>
+      .hero-gradient{background:radial-gradient(1200px 600px at 80% 0%, rgba(99,102,241,.20), transparent), radial-gradient(1000px 500px at 0% 0%, rgba(16,185,129,.18), transparent), linear-gradient(180deg, #0b0b0f 0%, #0a0a10 100%);} 
+    </style>
+  </head>
+  <body class="bg-zinc-950 text-zinc-100 selection:bg-indigo-500/30">
+    <!-- Header -->
+    <header class="sticky top-0 z-50 backdrop-blur bg-zinc-950/70 border-b border-white/5">
+      <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+        <a href="index.html" class="flex items-center gap-3">
+          <span class="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-600 shadow-glow">🎮</span>
+          <span class="font-semibold">Dota 2 Cup <span class="text-zinc-400">by</span> <span class="text-indigo-400">Kleveros Shop</span></span>
+        </a>
+        <nav class="hidden md:flex items-center gap-6 text-sm text-zinc-300">
+          <a href="register.html" class="hover:text-white">Регистрация</a>
+          <a href="rules.html" class="hover:text-white">Правила</a>
+          <a href="bracket.html" class="hover:text-white">Сетка</a>
+          <a href="#faq" class="hover:text-white">FAQ</a>
+        </nav>
+        <a href="register.html" class="hidden md:inline-flex rounded-xl px-4 py-2 bg-indigo-600 hover:bg-indigo-500 transition">Принять участие</a>
+        <button id="menuBtn" class="md:hidden inline-flex h-10 w-10 items-center justify-center rounded-lg bg-white/5">☰</button>
+      </div>
+      <div id="mobileMenu" class="md:hidden hidden border-t border-white/5">
+        <div class="px-4 py-3 space-y-3 text-zinc-300">
+          <a href="register.html" class="block hover:text-white">Регистрация</a>
+          <a href="rules.html" class="block hover:text-white">Правила</a>
+          <a href="bracket.html" class="block hover:text-white">Сетка</a>
+          <a href="#faq" class="block hover:text-white">FAQ</a>
+        </div>
+      </div>
+    </header>
+
+    <!-- Hero -->
+    <section class="hero-gradient border-b border-white/5">
+      <div class="max-w-7xl mx-auto px-4 py-20 md:py-28">
+        <div class="grid md:grid-cols-2 gap-10 items-center">
+          <div>
+            <div class="inline-flex items-center gap-2 text-xs tracking-widest uppercase text-zinc-400 bg-white/5 rounded-full px-3 py-1 border border-white/10">Открыта регистрация</div>
+            <h1 class="mt-5 text-4xl md:text-5xl font-extrabold leading-tight">
+              Турнир <span class="text-indigo-400">Dota 2</span> с реальными призами от <span class="text-emerald-400">Kleveros Shop</span>
+            </h1>
+            <p class="mt-4 text-zinc-300/90 md:text-lg">Регистрируйся, играй и забирай призы. Участвовать можно соло, тогда мы подберем тебе игроков среднего рейтинга или собери друзей и зарегестрируйся.</p>
+            <div class="mt-6 flex flex-wrap items-center gap-3">
+              <a href="register.html" class="rounded-xl px-5 py-3 bg-indigo-600 hover:bg-indigo-500 transition shadow-glow">Зарегистрироваться</a>
+              <a href="rules.html" class="rounded-xl px-5 py-3 bg-white/5 hover:bg-white/10 transition border border-white/10">Посмотреть правила</a>
+            </div>
+            <div class="mt-8">
+              <div class="text-sm text-zinc-400">Старт турнира через:</div>
+              <div id="countdown" data-start="2025-10-04T10:30:00+02:00" class="mt-2 grid grid-cols-4 gap-3 max-w-md">
+                <div class="rounded-xl bg-white/5 border border-white/10 p-4 text-center"><div class="text-3xl font-bold" data-days>–</div><div class="text-xs text-zinc-400">дней</div></div>
+                <div class="rounded-xl bg-white/5 border border-white/10 p-4 text-center"><div class="text-3xl font-bold" data-hours>–</div><div class="text-xs text-zinc-400">часов</div></div>
+                <div class="rounded-xl bg-white/5 border border-white/10 p-4 text-center"><div class="text-3xl font-bold" data-minutes>–</div><div class="text-xs text-zinc-400">минут</div></div>
+                <div class="rounded-xl bg-white/5 border border-white/10 p-4 text-center"><div class="text-3xl font-bold" data-seconds>–</div><div class="text-xs text-zinc-400">секунд</div></div>
+              </div>
+            </div>
+          </div>
+          
+        </div>
+      </div>
+    </section>
+
+    <!-- Prizes -->
+    <section class="py-16 md:py-20 border-b border-white/5">
+      <div class="max-w-7xl mx-auto px-4">
+        <h2 class="text-2xl md:text-3xl font-bold">Призы от Kleveros Shop</h2>
+        <p class="text-zinc-400 mt-2"></p>
+        <div class="mt-8 grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div class="rounded-2xl overflow-hidden border border-white/10 bg-white/5">
+            <img src="assets/photo_2025-08-26_19-53-11.jpg" alt="Приз 1" class="aspect-[4/3] w-full object-cover">
+            <div class="p-4">
+              <div class="font-semibold">1 место — футболка consciousness</div>
+              <div class="text-sm text-zinc-400">Размеры на выбор. Каждому участнику команды.</div>
+            </div>
+          </div>
+          <div class="rounded-2xl overflow-hidden border border-white/10 bg-white/5">
+            <img src="assets/photo_2025-08-26_19-55-23.jpg" alt="Приз 2" class="aspect-[4/3] w-full object-cover">
+            <div class="p-4">
+              <div class="font-semibold">2 место — скидка 25% на весь товар</div>
+              <div class="text-sm text-zinc-400">Каждому участнику команды.</div>
+            </div>
+          </div>
+          <div class="rounded-2xl overflow-hidden border border-white/10 bg-white/5">
+            <img src="assets/photo_2025-08-26_20-11-28.jpg" alt="Приз 3" class="aspect-[4/3] w-full object-cover">
+            <div class="p-4">
+              <div class="font-semibold">3 место — Проходка на следующий турнир</div>
+              <div class="text-sm text-zinc-400">Каждому участнику команды.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Steps -->
+    <section class="py-16 md:py-20 border-b border-white/5">
+      <div class="max-w-7xl mx-auto px-4">
+        <h2 class="text-2xl md:text-3xl font-bold">Как это работает</h2>
+        <div class="mt-8 grid md:grid-cols-4 gap-6">
+          <div class="rounded-2xl p-5 border border-white/10 bg-white/5">
+            <div class="text-sm text-zinc-400">Шаг 1</div>
+            <div class="font-semibold mt-1">Регистрируйся</div>
+            <p class="text-zinc-400 text-sm mt-2">Зарегестрируйся командой или соло и мы подберем тебе игроков.</p>
+          </div>
+          <div class="rounded-2xl p-5 border border-white/10 bg-white/5">
+            <div class="text-sm text-zinc-400">Шаг 2</div>
+            <div class="font-semibold mt-1">Играешь по расписанию</div>
+            <p class="text-zinc-400 text-sm mt-2">Получай уведомления в Discord/Telegram.</p>
+          </div>
+          <div class="rounded-2xl p-5 border border-white/10 bg-white/5">
+            <div class="text-sm text-zinc-400">Шаг 3</div>
+            <div class="font-semibold mt-1">Побеждай</div>
+            <p class="text-zinc-400 text-sm mt-2">Следи за сеткой на странице «Сетка».</p>
+          </div>
+          <div class="rounded-2xl p-5 border border-white/10 bg-white/5">
+            <div class="text-sm text-zinc-400">Шаг 4</div>
+            <div class="font-semibold mt-1">Забирай призы</div>
+            <p class="text-zinc-400 text-sm mt-2">После турнира мы отпишем вам на ваш телеграмм который вы указывали.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FAQ -->
+    <section id="faq" class="py-16 md:py-20">
+      <div class="max-w-5xl mx-auto px-4">
+        <h2 class="text-2xl md:text-3xl font-bold">FAQ</h2>
+        <div class="mt-8 space-y-6">
+          <details class="group rounded-xl border border-white/10 bg-white/5 p-5">
+            <summary class="cursor-pointer list-none flex justify-between items-center">
+              <span class="font-medium">Сколько стоит участие?</span>
+              <span class="transition group-open:rotate-180">⌄</span>
+            </summary>
+            <p class="text-zinc-400 mt-3">Участие бесплатное для первого турнира бесплатное.</p>
+          </details>
+          <details class="group rounded-xl border border-white/10 bg-white/5 p-5">
+            <summary class="cursor-pointer list-none flex justify-between items-center">
+              <span class="font-medium">Как получить приз?</span>
+              <span class="transition group-open:rotate-180">⌄</span>
+            </summary>
+            <p class="text-zinc-400 mt-3">Победители получают SMS с инструкцией.</p>
+          </details>
+          <details class="group rounded-xl border border-white/10 bg-white/5 p-5">
+            <summary class="cursor-pointer list-none flex justify-between items-center">
+              <span class="font-medium">Где проходит турнир?</span>
+              <span class="transition group-open:rotate-180">⌄</span>
+            </summary>
+            <p class="text-zinc-400 mt-3">Онлайн. Сервер EU West. Формат — см. страницу «Правила».</p>
+          </details>
+        </div>
+        <div class="mt-10">
+          <a href="register.html" class="inline-flex rounded-xl px-5 py-3 bg-indigo-600 hover:bg-indigo-500 transition shadow-glow">Перейти к регистрации</a>
+        </div>
+      </div>
+    </section>
+
+    <footer class="border-t border-white/5">
+      <div class="max-w-7xl mx-auto px-4 py-8 text-sm text-zinc-400 flex flex-wrap gap-4 justify-between">
+        <div>© <span id="year"></span> Kleveros Shop — турниры по Dota 2</div>
+        <div class="space-x-4">
+          <a href="rules.html" class="hover:text-white">Правила</a>
+        </div>
+      </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+    <script>
+  // показать/скрыть блок состава
+  const formatSelect = document.querySelector('select[name="format"]');
+  const teamBlock = document.getElementById('teamBlock');
+  function toggleTeam(){ teamBlock.classList.toggle('hidden', formatSelect.value !== '5x5'); }
+  formatSelect.addEventListener('change', toggleTeam); toggleTeam();
+
+  // отправка на API
+  const form = document.getElementById('regForm');
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const payload = Object.fromEntries(new FormData(form).entries());
+
+    if (payload.format === '5x5' && (!payload.roster || payload.roster.trim().length < 3)) {
+      alert('Укажи состав команды (5 игроков).');
+      return;
+    }
+
+    try {
+      const resp = await fetch('http://localhost:3000/api/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const text = await resp.text();
+      if (!resp.ok) throw new Error(text || 'Ошибка Challonge');
+      // успех — редиректим
+      window.location.href = 'success.html';
+    } catch (err) {
+      alert('Ошибка регистрации: ' + err.message);
+      console.error(err);
+    }
+  });
+</script>
+  </body>
+</html>

@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Победители — Dota 2 Cup by Your Shop</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="bg-zinc-950 text-zinc-100">
+    <header class="sticky top-0 z-50 backdrop-blur bg-zinc-950/70 border-b border-white/5">
+      <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+        <a href="index.html" class="font-semibold">← На главную</a>
+        <a href="register.html" class="text-sm text-zinc-300 hover:text-white">Регистрация</a>
+      </div>
+    </header>
+
+    <main class="max-w-5xl mx-auto px-4 py-10">
+      <h1 class="text-3xl font-extrabold">Победители</h1>
+      <p class="text-zinc-400 mt-2">Список обновляется после завершения турнира.</p>
+      <div id="winners" class="mt-8 grid sm:grid-cols-2 gap-6"></div>
+    </main>
+
+    <script>
+      async function loadWinners(){
+        try{
+          const res = await fetch('data/winners.json', {cache:'no-store'});
+          if(!res.ok) throw new Error('HTTP '+res.status);
+          const data = await res.json();
+          const root = document.getElementById('winners');
+          if(!data.prizes?.length){
+            root.innerHTML = '<div class="text-zinc-400">Победители пока не добавлены.</div>';
+            return;
+          }
+          root.innerHTML = data.prizes.map(item => `
+            <div class="rounded-2xl border border-white/10 bg-white/5 p-5">
+              <div class="text-sm text-zinc-400">Место: ${item.place}</div>
+              <div class="text-xl font-semibold mt-1">${item.name}</div>
+              <div class="text-sm text-zinc-400 mt-1">${item.steam || ''}</div>
+              <div class="mt-3 rounded-xl bg-white/5 border border-white/10 p-3">
+                Приз: <span class="font-medium">${item.prize}</span>
+              </div>
+            </div>
+          `).join('');
+        }catch(e){
+          document.getElementById('winners').innerHTML = '<div class="text-zinc-400">Не удалось загрузить winners.json. Проверьте деплой/путь.</div>';
+        }
+      }
+      loadWinners();
+    </script>
+  </body>
+</html>
