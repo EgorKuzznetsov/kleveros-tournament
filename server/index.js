@@ -3,12 +3,42 @@ import cors from "cors";
 import fetch from "node-fetch";
 import fs from "fs/promises";
 import dotenv from "dotenv";
+import rateLimit from "express-rate-limit";
 dotenv.config();
 
 const app = express();
 app.use(cors());
 app.use(express.json());
+const registerLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 3,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { ok: false, error: "Слишком много запросов. Попробуйте позже." }
+});
+app.use("/api/register", registerLimiter);
+const lastByContact = new Map(); // key: messenger|email -> timestamp
+function tooSoon(contact, ms = 30_000) {
+  const now = Date.now();
+  const t = lastByContact.get(contact) || 0;
+  const ok = now - t > ms;
+  if (ok) lastByContact.set(contact, now);
+  return !ok;
+}
+function cleanStr(s = "") {
+  return String(s || "").trim().replace(/\s+/g, " ");
+}
+function hasUrl(s="") { return /(https?:\/\/|t\.me\/|@everyone|@here)/i.test(s); }
+function tooManyRepeats(s="") { return /(.)\1{3,}/i.test(s); } // aaaa / !!!! и т.п.
 
+function isBadInput(s="") {
+  const v = cleanStr(s);
+  if (!v) return true;
+  if (v.length > 40) return true;
+  if (hasUrl(v)) return true;
+  if (tooManyRepeats(v)) return true;
+  return false;
+}
 console.log("KEY:", (process.env.CHALLONGE_API_KEY || "").slice(0, 6) + "...");
 console.log("TOURNEY:", process.env.CHALLONGE_TOURNEY);
 
@@ -85,7 +115,38 @@ app.post("/api/register", async (req, res) => {
       team_name,            // для информации
       roster_text           // опц. состав команды текстом
     } = req.body;
+if (req.body.honeypot) {
+      return res.status(400).json({ ok:false, error:"Spam detected" });
+    }
 
+    // Нормализация
+    const joinType = (join_type || "").toLowerCase();
+    const nick = cleanStr(player_nick);
+    const team = cleanStr(team_or_nick || team_name);
+    const tg   = cleanStr(messenger);
+    const mail = cleanStr(email);
+
+    // Персональный кулдаун: не чаще 1 заявки / 30 сек с одного контакта
+    const cooldownKey = tg || mail || req.ip;
+    if (tooSoon(cooldownKey, 30_000)) {
+      return res.status(429).json({ ok:false, error:"Пожалуйста, подождите немного и отправьте снова." });
+    }
+
+    // Базовая валидация
+    if (joinType === "solo") {
+      if (isBadInput(nick)) return res.status(400).json({ ok:false, error:"Некоректний нік" });
+      if (!tg || tg.length < 3 || tg.length > 50) return res.status(400).json({ ok:false, error:"Вкажіть коректний Telegram" });
+      const mmrNum = Number(mmr);
+      if (!Number.isFinite(mmrNum) || mmrNum < 0 || mmrNum > 15000) {
+        return res.status(400).json({ ok:false, error:"Некоректний MMR" });
+      }
+    } else {
+      // team
+      if (isBadInput(team)) return res.status(400).json({ ok:false, error:"Некоректна назва команди" });
+      if (isBadInput(nick)) return res.status(400).json({ ok:false, error:"Некоректний нік капітана" });
+      if (!tg || tg.length < 3 || tg.length > 50) return res.status(400).json({ ok:false, error:"Вкажіть коректний Telegram" });
+      if ((roster_text || "").length > 500) return res.status(400).json({ ok:false, error:"Занадто довгий список складу" });
+    }
     const type = String(join_type || "").trim().toLowerCase();
 
     if (!team_or_nick?.trim())
