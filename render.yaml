@@ -1,5 +1,5 @@
 services:
-  # ==== BACKEND ====
+  # ==== BACKEND (Node.js) ====
   - type: web
     name: kleveros-api
     env: node
@@ -13,10 +13,10 @@ services:
     healthCheckPath: "/"
     autoDeploy: true
 
-  # ==== FRONTEND ====
-  - type: static_site
+  # ==== FRONTEND (Static Site) ====
+  - type: static
     name: kleveros-front
     rootDir: .
-    buildCommand: ""
-    staticPublishPath: "."
+    buildCommand: ""        # сборка не нужна
+    publishPath: "."        # что публиковать (корень, где index.html)
     autoDeploy: true
