@@ -10,15 +10,13 @@ services:
     envVars:
       - key: PORT
         value: "3000"
-      # Остальные зададим в панели для безопасности:
-      # CHALLONGE_API_KEY, CHALLONGE_TOURNEY, TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID
     healthCheckPath: "/"
     autoDeploy: true
 
-  # ==== FRONTEND (статический сайт) ====
-  - type: static
+  # ==== FRONTEND ====
+  - type: static_site
     name: kleveros-front
     rootDir: .
-    buildCommand: ""          # статике билд не нужен
-    staticPublishPath: "."    # корень репо (где index.html)
+    buildCommand: ""
+    staticPublishPath: "."
     autoDeploy: true
