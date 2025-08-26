@@ -176,18 +176,21 @@
     </footer>
 
     <script src="js/main.js"></script>
-   <script>
+  <script>
   const API_BASE =
     location.hostname.includes("localhost") || location.hostname.startsWith("127.")
       ? "http://localhost:3000"
       : "https://kleveros-tournament.onrender.com";
 
+  console.log("API_BASE =", API_BASE);
+
   const formatSelect = document.querySelector('select[name="format"]');
-  const teamBlock = document.getElementById('teamBlock');
-  function toggleTeam() { 
-    teamBlock.classList.toggle('hidden', formatSelect.value !== '5x5'); 
+  const teamBlock    = document.getElementById('teamBlock');
+
+  function toggleTeam() {
+    teamBlock.classList.toggle('hidden', formatSelect.value !== '5x5');
   }
-  formatSelect.addEventListener('change', toggleTeam); 
+  formatSelect.addEventListener('change', toggleTeam);
   toggleTeam();
 
   const form = document.getElementById('regForm');
@@ -204,17 +207,18 @@
       const resp = await fetch(`${API_BASE}/api/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
       });
       const text = await resp.text();
       if (!resp.ok) throw new Error(text || 'Ошибка Challonge');
       window.location.href = 'success.html';
     } catch (err) {
+      console.error('index submit error:', err);
       alert('Ошибка регистрации: ' + err.message);
-      console.error(err);
     }
   });
 </script>
+
 
 
   </body>

@@ -85,10 +85,13 @@
 </main>
 
 <script>
+  // БАЗОВЫЙ URL API (локалка vs прод)
   const API_BASE =
     location.hostname.includes("localhost") || location.hostname.startsWith("127.")
-      ? "http://localhost:3000"
-      : "https://kleveros-tournament.onrender.com";
+      ? "http://localhost:3000"                 // локально
+      : "https://kleveros-tournament.onrender.com"; // твой backend на Render
+
+  console.log("API_BASE =", API_BASE); // диагностика
 
   const joinTypeSel = document.getElementById('join_type');
   const mmrBlock    = document.getElementById('mmrBlock');
@@ -121,6 +124,7 @@
     const data = Object.fromEntries(fd.entries());
     const isSolo = data.join_type === 'solo';
 
+    // Собираем общее поле, которое ждёт сервер
     data.team_or_nick = isSolo ? (data.player_nick || '').trim() : (data.team_name || '').trim();
     if (!data.team_or_nick) {
       alert(isSolo ? 'Укажи ник.' : 'Укажи название команды.');
@@ -135,7 +139,7 @@
       const resp = await fetch(`${API_BASE}/api/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
+        body: JSON.stringify(data),
       });
 
       const payload = await resp.text();
@@ -143,11 +147,12 @@
 
       window.location.href = 'success.html';
     } catch (err) {
-      console.error(err);
+      console.error('register error:', err);
       alert('Ошибка регистрации: ' + err.message);
     }
   });
 </script>
+
 
 
 </body>
