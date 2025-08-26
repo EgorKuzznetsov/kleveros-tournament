@@ -85,6 +85,11 @@
 </main>
 
 <script>
+  const API_BASE =
+    location.hostname.includes("localhost") || location.hostname.startsWith("127.")
+      ? "http://localhost:3000"
+      : "https://kleveros-tournament.onrender.com";
+
   const joinTypeSel = document.getElementById('join_type');
   const mmrBlock    = document.getElementById('mmrBlock');
   const mmrInput    = document.getElementById('mmr');
@@ -116,7 +121,6 @@
     const data = Object.fromEntries(fd.entries());
     const isSolo = data.join_type === 'solo';
 
-    // Собираем общее поле для сервера
     data.team_or_nick = isSolo ? (data.player_nick || '').trim() : (data.team_name || '').trim();
     if (!data.team_or_nick) {
       alert(isSolo ? 'Укажи ник.' : 'Укажи название команды.');
@@ -128,26 +132,23 @@
     }
 
     try {
-  const resp = await fetch('http://localhost:3000/api/register', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data)
-  });
+      const resp = await fetch(`${API_BASE}/api/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
 
-  // Сначала проверим статус и дочитаем тело
-  const payload = await resp.text(); // можно и resp.json(), если на сервере всегда json
+      const payload = await resp.text();
+      if (!resp.ok) throw new Error(payload || 'Ошибка сервера');
 
-  if (!resp.ok) {
-    throw new Error(payload || 'Ошибка сервера');
-  }
-
-  // только после успешного ответа — переход
-  window.location.href = 'success.html';
-} catch (err) {
-  console.error(err);
-  alert('Ошибка регистрации: ' + err.message);
-}
+      window.location.href = 'success.html';
+    } catch (err) {
+      console.error(err);
+      alert('Ошибка регистрации: ' + err.message);
+    }
   });
 </script>
+
+
 </body>
 </html>

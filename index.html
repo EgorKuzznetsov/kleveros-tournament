@@ -176,14 +176,20 @@
     </footer>
 
     <script src="js/main.js"></script>
-    <script>
-  // показать/скрыть блок состава
+   <script>
+  const API_BASE =
+    location.hostname.includes("localhost") || location.hostname.startsWith("127.")
+      ? "http://localhost:3000"
+      : "https://kleveros-tournament.onrender.com";
+
   const formatSelect = document.querySelector('select[name="format"]');
   const teamBlock = document.getElementById('teamBlock');
-  function toggleTeam(){ teamBlock.classList.toggle('hidden', formatSelect.value !== '5x5'); }
-  formatSelect.addEventListener('change', toggleTeam); toggleTeam();
+  function toggleTeam() { 
+    teamBlock.classList.toggle('hidden', formatSelect.value !== '5x5'); 
+  }
+  formatSelect.addEventListener('change', toggleTeam); 
+  toggleTeam();
 
-  // отправка на API
   const form = document.getElementById('regForm');
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -195,14 +201,13 @@
     }
 
     try {
-      const resp = await fetch('http://localhost:3000/api/register', {
+      const resp = await fetch(`${API_BASE}/api/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
       const text = await resp.text();
       if (!resp.ok) throw new Error(text || 'Ошибка Challonge');
-      // успех — редиректим
       window.location.href = 'success.html';
     } catch (err) {
       alert('Ошибка регистрации: ' + err.message);
@@ -210,5 +215,7 @@
     }
   });
 </script>
+
+
   </body>
 </html>
