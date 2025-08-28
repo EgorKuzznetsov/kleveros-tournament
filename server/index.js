@@ -198,7 +198,7 @@ app.post("/api/register", async (req, res) => {
           .status(400)
           .json({ ok: false, error: "Вкажіть коректний Telegram" });
       const mmrNum = Number(mmr);
-      if (!Number.isFinite(mmrNum) || mmrNum < 0 || mmrNum > 15000) {
+      if (!Number.isFinite(mmrNum) || mmrNum < 0 || mmrNum > 1500000000) {
         return res.status(400).json({ ok: false, error: "Некоректний MMR" });
       }
     } else {
