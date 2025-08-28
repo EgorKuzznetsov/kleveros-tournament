@@ -22,7 +22,6 @@
   <p class="text-zinc-400 mt-2">Команда — вкажи назву, нік капітана і Telegram. Соло — нік, Telegram та MMR.</p>
 
   <form id="regForm" class="mt-8 space-y-6 bg-white/5 border border-white/10 rounded-2xl p-6" novalidate>
-    <!-- Тип + Telegram -->
     <div class="grid md:grid-cols-2 gap-5">
       <div>
         <label class="block text-sm text-zinc-300 mb-1">Тип участі</label>
@@ -37,7 +36,6 @@
       </div>
     </div>
 <input type="text" name="honeypot" autocomplete="off" tabindex="-1" class="hidden" style="display:none;">
-    <!-- Назва команди + Нік -->
     <div class="grid md:grid-cols-2 gap-5">
       <div id="teamNameWrap">
         <label class="block text-sm text-zinc-300 mb-1">Назва команди</label>
@@ -48,14 +46,10 @@
         <input name="player_nick" id="player_nick" class="w-full bg-zinc-900 border border-white/10 rounded-xl px-3 py-2" placeholder="Наприклад, Dendi" required>
       </div>
     </div>
-
-    <!-- MMR — тільки для соло -->
     <div id="mmrBlock" class="hidden">
       <label class="block text-sm text-zinc-300 mb-1">MMR (лише для соло)</label>
       <input name="mmr" id="mmr" type="number" min="0" step="1" class="w-full bg-zinc-900 border border-white/10 rounded-xl px-3 py-2" placeholder="наприклад, 2500">
     </div>
-
-    <!-- Контакти -->
     <div class="grid md:grid-cols-2 gap-5">
       <div>
         <label class="block text-sm text-zinc-300 mb-1">E-mail (необов’язково)</label>
@@ -66,8 +60,6 @@
         <input name="phone" class="w-full bg-zinc-900 border border-white/10 rounded-xl px-3 py-2" placeholder="+380...">
       </div>
     </div>
-
-    <!-- Склад команди -->
     <div id="teamRoster" class="">
       <label class="block text-sm text-zinc-300 mb-1">Склад команди (текстом, опційно)</label>
       <textarea name="roster_text" rows="3" class="w-full bg-zinc-900 border border-white/10 rounded-xl px-3 py-2" placeholder="Гравець 1, Гравець 2, Гравець 3, Гравець 4, Гравець 5"></textarea>
@@ -77,15 +69,18 @@
       <input id="agree" type="checkbox" class="mt-1" required>
       <label for="agree" class="text-sm text-zinc-300">Я приймаю <a class="underline" href="rules.html">правила турніру</a>.</label>
     </div>
+    <div style="gap: 20px;" class="flex">
 
-    <button type="button" id="submitBtn" class="rounded-xl px-5 py-3 bg-indigo-600 hover:bg-indigo-500 transition">
-      Надіслати заявку
-    </button>
+      <button type="button" id="submitBtn" class="rounded-xl px-5 py-3 bg-indigo-600 hover:bg-indigo-500 transition">
+        Надіслати заявку
+      </button>
+  
+      <img id="load" style="width: 50px;" class="animate-spin hidden" src="./assets/loading-circles-blue-gradient.png" alt="">
+    </div>
   </form>
 </main>
 
 <script>
-  // API base
   const API_BASE =
     location.hostname.includes("localhost") || location.hostname.startsWith("127.")
       ? "http://localhost:3000"
@@ -96,7 +91,7 @@
   const mmrInput    = document.getElementById('mmr');
   const teamRoster  = document.getElementById('teamRoster');
   const teamNameInp = document.getElementById('team_name');
-
+  const load = document.getElementById('load')
   function toggleByType() {
     const isSolo = joinTypeSel.value === 'solo';
     mmrBlock.classList.toggle('hidden', !isSolo);
@@ -117,7 +112,7 @@
 
   submitBtn.addEventListener('click', async () => {
     if (!form.reportValidity()) return;
-
+    
     const fd = new FormData(form);
     const data = Object.fromEntries(fd.entries());
     const isSolo = data.join_type === 'solo';
@@ -131,7 +126,7 @@
       if (!data.messenger?.trim()) return alert('Вкажи Telegram.');
       if (!data.mmr || Number(data.mmr) < 0) return alert('Вкажи коректний MMR.');
     }
-
+    load.classList.remove('hidden')
     try {
       const resp = await fetch(`${API_BASE}/api/register`, {
         method: 'POST',
@@ -144,8 +139,8 @@
 
       window.location.href = 'success.html';
     } catch (err) {
-      console.error('register error:', err);
-      alert('Не клацайте так часто!!!');
+    
+      
     }
   });
 </script>
