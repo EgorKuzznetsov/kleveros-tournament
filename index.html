@@ -25,17 +25,17 @@
           <span class="font-semibold">Dota 2 Cup <span class="text-zinc-400">by</span> <span class="text-indigo-400">Kleveros Shop</span></span>
         </a>
         <nav class="hidden md:flex items-center gap-6 text-sm text-zinc-300">
-          <a href="register.html" class="hover:text-white">Реєстрація</a>
+          <a href="" class="hover:text-white" id="reg5">Реєстрація</a>
           <a href="rules.html" class="hover:text-white">Правила</a>
           <a href="bracket.html" class="hover:text-white">Сітка</a>
           <a href="#faq" class="hover:text-white">FAQ</a>
         </nav>
-        <a href="register.html" class="hidden md:inline-flex rounded-xl px-4 py-2 bg-indigo-600 hover:bg-indigo-500 transition">Взяти участь</a>
+        <a href="" class="hidden md:inline-flex rounded-xl px-4 py-2 bg-indigo-600 hover:bg-indigo-500 transition" id="reg2">Взяти участь</a>
         <button id="menuBtn" class="md:hidden inline-flex h-10 w-10 items-center justify-center rounded-lg bg-white/5">☰</button>
       </div>
       <div id="mobileMenu" class="md:hidden hidden border-t border-white/5">
         <div class="px-4 py-3 space-y-3 text-zinc-300">
-          <a href="register.html" class="block hover:text-white">Реєстрація</a>
+          <a href="register.html" class="block hover:text-white" id="reg3">Реєстрація</a>
           <a href="rules.html" class="block hover:text-white">Правила</a>
           <a href="bracket.html" class="block hover:text-white">Сітка</a>
           <a href="#faq" class="block hover:text-white">FAQ</a>
@@ -46,13 +46,13 @@
       <div class="max-w-7xl mx-auto px-4 py-20 md:py-28">
         <div class="grid md:grid-cols-2 gap-10 items-center">
           <div>
-            <div class="inline-flex items-center gap-2 text-xs tracking-widest uppercase text-zinc-400 bg-white/5 rounded-full px-3 py-1 border border-white/10">Відкрита реєстрація</div>
+            <div class="inline-flex items-center gap-2 text-xs tracking-widest uppercase text-zinc-400 bg-white/5 rounded-full px-3 py-1 border border-white/10" id="reg4">Реєстрація зачинена</div>
             <h1 class="mt-5 text-4xl md:text-5xl font-extrabold leading-tight">
               Турнір <span class="text-indigo-400">Dota 2</span> з призами від <span class="text-emerald-400">Kleveros Shop</span>
             </h1>
             <p class="mt-4 text-zinc-300/90 md:text-lg">Реєструйся, грай і забирай призи. Можна соло (ми підберемо тобі гравців за рейтингом) або зібрати друзів і зареєструвати команду.</p>
             <div class="mt-6 flex flex-wrap items-center gap-3">
-              <a href="register.html" class="rounded-xl px-5 py-3 bg-indigo-600 hover:bg-indigo-500 transition shadow-glow">Зареєструватися</a>
+              <a href="" class="rounded-xl px-5 py-3 bg-indigo-600 hover:bg-indigo-500 transition shadow-glow" id="reg6">Зареєструватися</a>
               <a href="rules.html" class="rounded-xl px-5 py-3 bg-white/5 hover:bg-white/10 transition border border-white/10">Переглянути правила</a>
             </div>
             <div class="mt-8">
@@ -150,7 +150,7 @@
           </details>
         </div>
         <div class="mt-10">
-          <a href="register.html" class="inline-flex rounded-xl px-5 py-3 bg-indigo-600 hover:bg-indigo-500 transition shadow-glow">Перейти до реєстрації</a>
+          <a href="" class="inline-flex rounded-xl px-5 py-3 bg-indigo-600 hover:bg-indigo-500 transition shadow-glow" id="reg1">Перейти до реєстрації</a>
         </div>
       </div>
     </section>
@@ -165,6 +165,31 @@
     </footer>
     <script src="js/main.js"></script>
     <script>
+      const register1 = document.getElementById('reg1')
+      const register2 = document.getElementById('reg2')
+      const register3 = document.getElementById('reg3')
+      const register4 = document.getElementById('reg4')
+      const register5 = document.getElementById('reg5')
+      const register6 = document.getElementById('reg6')
+
+      register1.addEventListener('click',() =>{
+        alert('На жаль реєстрація зачинена')
+      })
+      register2.addEventListener('click',() =>{
+        alert('На жаль реєстрація зачинена')
+      })
+      register3.addEventListener('click',() =>{
+        alert('На жаль реєстрація зачинена')
+      })
+      register4.addEventListener('click',() =>{
+        alert('На жаль реєстрація зачинена')
+      })
+       register5.addEventListener('click',() =>{
+        alert('На жаль реєстрація зачинена')
+      })
+       register6.addEventListener('click',() =>{
+        alert('На жаль реєстрація зачинена')
+      })
       const API_BASE =
         location.hostname.includes("localhost") || location.hostname.startsWith("127.")
           ? "http://localhost:3000"
